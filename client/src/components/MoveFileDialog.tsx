@@ -28,11 +28,6 @@ interface MoveFileDialogProps {
   onSubmit: (folderId: string) => void;
 }
 
-/**
- * A flat list indented by depth rather than an expandable tree: the server
- * already returns the room's folders ordered by path, so this reads correctly
- * with no client-side assembly.
- */
 export function MoveFileDialog({
   file,
   pending,

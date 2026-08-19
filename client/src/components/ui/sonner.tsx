@@ -7,8 +7,6 @@ import {
   Loader2Icon,
 } from "lucide-react"
 
-// The registry version reads the active theme from `next-themes`. This app has
-// a single light theme, so the dependency is dropped rather than installed.
 const Toaster = ({ ...props }: ToasterProps) => {
   return (
     <Sonner

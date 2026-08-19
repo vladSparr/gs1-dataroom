@@ -19,8 +19,6 @@ export function FilePreviewDialog({
   file,
   onOpenChange,
 }: FilePreviewDialogProps) {
-  // Signed URLs are short-lived, so one is minted when the dialog opens and
-  // never cached beyond it.
   const link = useQuery({
     queryKey: ['file', file.id, 'download-url'],
     queryFn: () => getDownloadUrl(file.id),
@@ -34,8 +32,6 @@ export function FilePreviewDialog({
         <DialogHeader className="flex-row items-center justify-between gap-4 border-b px-5 py-3">
           <DialogTitle className="truncate text-sm">{file.name}</DialogTitle>
 
-          {/* Deliberately visible rather than tucked in a menu: some browsers
-              refuse to render PDFs in an iframe, and this is the way out. */}
           <Button
             variant="outline"
             size="sm"

@@ -20,7 +20,6 @@ import type {
 } from './dto/share-response.dto';
 import { SharesService } from './shares.service';
 
-/** Owner-facing. Everything here requires a session. */
 @Controller()
 export class SharesController {
   constructor(private readonly shares: SharesService) {}

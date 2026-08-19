@@ -228,7 +228,6 @@ export function FolderPage() {
         </div>
       </div>
 
-      {/* Dragging is not the only way in: the button opens this. */}
       <input
         ref={filePicker}
         type="file"

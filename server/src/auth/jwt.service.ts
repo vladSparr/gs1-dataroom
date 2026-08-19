@@ -3,16 +3,10 @@ import { ConfigService } from '@nestjs/config';
 import { createRemoteJWKSet, jwtVerify, type JWTPayload } from 'jose';
 import type { AuthUser } from './auth.types';
 
-/** Supabase issues tokens for the `authenticated` audience. */
 const AUDIENCE = 'authenticated';
 
-/** A cold instance's clock can lag far enough to reject a fresh token. */
 const CLOCK_TOLERANCE_SECONDS = 5;
 
-/**
- * Verifies Supabase access tokens against the project's public JWKS.
- * We never issue tokens ourselves, so there is no signing key on this side.
- */
 @Injectable()
 export class JwtService {
   private readonly jwks: ReturnType<typeof createRemoteJWKSet>;
@@ -23,7 +17,6 @@ export class JwtService {
     const jwksUrl = config.getOrThrow<string>('SUPABASE_JWKS_URL');
 
     this.issuer = `${supabaseUrl.replace(/\/+$/, '')}/auth/v1`;
-    // Built once: the set caches keys and refetches only on an unknown `kid`.
     this.jwks = createRemoteJWKSet(new URL(jwksUrl));
   }
 
@@ -36,7 +29,6 @@ export class JwtService {
       });
       return toAuthUser(payload);
     } catch {
-      // The underlying jose message describes our verification setup — keep it internal.
       throw new UnauthorizedException('Invalid or expired token');
     }
   }
@@ -55,7 +47,6 @@ function toAuthUser(payload: JWTPayload): AuthUser {
   return {
     id,
     email,
-    // Claim names differ per provider; take the first one that is present.
     name: readString(metadata.full_name) ?? readString(metadata.name),
     avatarUrl: readString(metadata.avatar_url) ?? readString(metadata.picture),
   };

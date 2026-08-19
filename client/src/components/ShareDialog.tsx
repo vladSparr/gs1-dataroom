@@ -177,7 +177,6 @@ function InviteTab({
   const [emails, setEmails] = useState<string[]>([]);
 
   const commit = () => {
-    // Comma, semicolon, space or Enter all end an address.
     const parts = draft
       .split(/[,;\s]+/)
       .map((part) => part.trim().toLowerCase())

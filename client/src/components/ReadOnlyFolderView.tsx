@@ -24,11 +24,6 @@ interface ReadOnlyFolderViewProps {
   onDownloadFile: (file: FileItem) => void;
 }
 
-/**
- * The recipient's listing. It passes no action callbacks to `ContentsTable`,
- * which is what makes every row read-only — there is no create, upload,
- * rename, move or delete control anywhere on this path.
- */
 export function ReadOnlyFolderView({
   view,
   loading,
@@ -51,7 +46,6 @@ export function ReadOnlyFolderView({
 
   return (
     <div>
-      {/* Crumbs come clipped to the share root: nothing above it is named. */}
       <Breadcrumb>
         <BreadcrumbList>
           {view.breadcrumbs.map((crumb, index) => {

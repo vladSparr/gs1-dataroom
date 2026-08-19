@@ -17,10 +17,6 @@ interface UploadQueueProps {
   onDismiss: () => void;
 }
 
-/**
- * Fixed panel, deliberately not a modal: browsing must stay possible while
- * files are going up.
- */
 export function UploadQueue({ items, onRetry, onDismiss }: UploadQueueProps) {
   const [collapsed, setCollapsed] = useState(false);
 

@@ -14,12 +14,6 @@ export class RoomsService {
     private readonly storage: StorageService,
   ) {}
 
-  /**
-   * A room without a root folder breaks every later query, so both rows are
-   * written in one transaction. The folder id only exists after the insert,
-   * which is why the path is filled in by a second statement rather than
-   * being computed up front.
-   */
   async create(userId: string, name: string): Promise<RoomResponseDto> {
     return this.prisma.$transaction(async (tx) => {
       const room = await tx.dataRoom.create({
@@ -75,10 +69,6 @@ export class RoomsService {
     return this.toResponse(room, await this.rootFolderId(roomId));
   }
 
-  /**
-   * The root folder mirrors the room name, so both are renamed together —
-   * otherwise the first breadcrumb disagrees with the rooms list.
-   */
   async rename(
     userId: string,
     roomId: string,
@@ -95,7 +85,6 @@ export class RoomsService {
     return this.toResponse(room, rootId);
   }
 
-  /** Flat list for the move picker: ordered by path, so parents precede children. */
   async listFolders(userId: string, roomId: string): Promise<RoomFolderDto[]> {
     await this.access.assertRoomAccess(userId, roomId);
 
@@ -109,8 +98,6 @@ export class RoomsService {
   async remove(userId: string, roomId: string): Promise<void> {
     await this.access.assertRoomAccess(userId, roomId);
 
-    // The cascade drops folders and files without running application code,
-    // so the blobs are collected before the rows disappear.
     const doomed = await this.prisma.file.findMany({
       where: { dataRoomId: roomId },
       select: { storageKey: true },

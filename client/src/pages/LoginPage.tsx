@@ -18,7 +18,6 @@ export function LoginPage() {
     try {
       await signInWithGoogle();
     } catch {
-      // The Toaster lives in AppShell, which is not mounted on this route.
       setRedirecting(false);
       setError('Could not start Google sign-in. Please try again.');
     }

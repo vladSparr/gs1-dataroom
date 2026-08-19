@@ -11,11 +11,6 @@ import { JwtService } from './jwt.service';
 
 const BEARER_PREFIX = 'Bearer ';
 
-/**
- * Global guard: every route requires a valid Supabase token unless it is
- * marked `@Public()`. Private-by-default means a missing decorator hides a
- * route rather than exposing it.
- */
 @Injectable()
 export class JwtGuard implements CanActivate {
   constructor(
@@ -32,9 +27,6 @@ export class JwtGuard implements CanActivate {
     ]);
 
     if (isPublic) {
-      // `@Public()` means the token is not required — not that it is ignored.
-      // A restricted share link has to know who is looking at it, and the same
-      // page must still render for a signed-out visitor.
       await this.attachViewerIfSignedIn(request);
       return true;
     }
@@ -57,7 +49,7 @@ export class JwtGuard implements CanActivate {
     try {
       request.user = await this.jwt.verify(token);
     } catch {
-      // An expired or malformed token on a public route is simply anonymous.
+      return;
     }
   }
 

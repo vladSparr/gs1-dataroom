@@ -11,19 +11,12 @@ interface UploadDropzoneProps {
   children: ReactNode;
 }
 
-/**
- * Wraps the folder contents. Dropping outside the zone must not navigate the
- * browser away to the file, which is its default behaviour, so the window
- * gets its own suppressors as well.
- */
 export function UploadDropzone({
   disabled = false,
   onFiles,
   children,
 }: UploadDropzoneProps) {
   const [dragging, setDragging] = useState(false);
-  // dragenter/dragleave fire for every child element; a counter keeps the
-  // highlight from flickering as the pointer crosses them.
   const depth = useRef(0);
 
   useEffect(() => {
@@ -84,7 +77,6 @@ export function UploadDropzone({
   );
 }
 
-/** Some browsers report an empty type; fall back to the extension. */
 function isPdf(file: File): boolean {
   return file.type === PDF_MIME || /\.pdf$/i.test(file.name);
 }

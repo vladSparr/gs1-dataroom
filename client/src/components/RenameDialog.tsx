@@ -14,7 +14,6 @@ import { Label } from '@/components/ui/label';
 interface RenameDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  /** "Data room" or "Folder" — used in the title. */
   entity: string;
   currentName: string;
   pending: boolean;
@@ -31,8 +30,6 @@ export function RenameDialog({
 }: RenameDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      {/* Radix unmounts the content on close, so the form's state resets on
-          each open without an effect. */}
       <DialogContent className="sm:max-w-md">
         <RenameForm
           entity={entity}

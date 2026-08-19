@@ -24,11 +24,9 @@ interface ItemRowProps {
   name: string;
   meta: string;
   onOpen: () => void;
-  /** Omitted in read-only views, which then render no menu at all. */
   actions?: FolderActions;
 }
 
-/** One folder in a listing. */
 export function ItemRow({ name, meta, onOpen, actions }: ItemRowProps) {
   return (
     <TableRow className="cursor-pointer" onClick={onOpen}>
@@ -47,7 +45,6 @@ export function ItemRow({ name, meta, onOpen, actions }: ItemRowProps) {
 
       <TableCell className="w-12">
         {actions && (
-          // Stops the row's navigation from firing when using the menu.
           <div onClick={(event) => event.stopPropagation()}>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

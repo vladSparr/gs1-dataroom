@@ -18,16 +18,10 @@ interface ContentsTableProps {
   onOpenFolder: (folderId: string) => void;
   onPreviewFile: (file: FileItem) => void;
   onDownloadFile: (file: FileItem) => void;
-  /** Both omitted in read-only views; the rows then render no edit menu. */
   folderActions?: (folder: Folder) => FolderActions;
   fileActions?: (file: FileItem) => FileActions;
 }
 
-/**
- * The one listing used by the owner's folder page and by the public share
- * view. Read-only is the absence of action callbacks, not a second component —
- * two copies would drift apart.
- */
 export function ContentsTable({
   folders,
   files,
@@ -42,7 +36,6 @@ export function ContentsTable({
       <Table>
         <ContentsHeader />
         <TableBody>
-          {/* Folders always sort above files. */}
           {folders.map((folder) => (
             <ItemRow
               key={folder.id}

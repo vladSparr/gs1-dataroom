@@ -10,7 +10,6 @@ import {
 } from '@/components/ui/breadcrumb';
 import type { Breadcrumb as Crumb } from '@/api/types';
 
-/** The chain comes from the server root-first; the last crumb is the current folder. */
 export function Breadcrumbs({ crumbs }: { crumbs: Crumb[] }) {
   return (
     <Breadcrumb>

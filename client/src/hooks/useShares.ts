@@ -13,7 +13,6 @@ export interface ShareTarget {
   name: string;
 }
 
-/** The queries below only run while a target is selected. */
 function required(target: ShareTarget | null): ShareTarget {
   if (!target) {
     throw new Error('No share target selected');
@@ -21,7 +20,6 @@ function required(target: ShareTarget | null): ShareTarget {
   return target;
 }
 
-/** Only fetched while the share dialog is open. */
 export function useShares(target: ShareTarget | null) {
   return useQuery({
     queryKey: ['shares', target?.type, target?.id],

@@ -39,8 +39,6 @@ export class SharesService {
     }
 
     const unique = [...new Set(emails)];
-    // Someone can be invited before they ever sign in, so the account is
-    // linked when it exists and matched on email when it does not.
     const known = await this.prisma.user.findMany({
       where: { email: { in: unique } },
       select: { id: true, email: true },
@@ -49,9 +47,6 @@ export class SharesService {
 
     const share = await this.prisma.share.create({
       data: {
-        // 32 random bytes: never derived from an id or a timestamp, and never
-        // the caller's session token, which has a different lifetime and would
-        // leak the sharer's identity.
         token: randomBytes(32).toString('base64url'),
         targetType,
         targetId,
@@ -100,7 +95,6 @@ export class SharesService {
     );
   }
 
-  /** Revoking keeps the row, so "who had access when" stays answerable. */
   async revoke(userId: string, shareId: string): Promise<void> {
     const share = await this.prisma.share.findUnique({
       where: { id: shareId },
@@ -120,11 +114,6 @@ export class SharesService {
     });
   }
 
-  /**
-   * Grants are matched by email, not by user id, because the invitation may
-   * predate the account. Any grant that now resolves to a real user is linked
-   * on the way past.
-   */
   async listSharedWithMe(
     userId: string,
     email: string,
@@ -167,11 +156,6 @@ export class SharesService {
     }));
   }
 
-  /**
-   * Confirms the caller owns the room holding the target and works out the
-   * subtree the share covers. A file's share is scoped to its parent folder's
-   * path; `AccessService` adds the id check that makes it a single file.
-   */
   private async resolveTarget(
     userId: string,
     targetType: ShareTargetType,
@@ -199,7 +183,6 @@ export class SharesService {
     return { dataRoomId: file.dataRoomId, targetPath: file.folder.path };
   }
 
-  /** Display names for a mixed batch of targets, two queries regardless of size. */
   private async nameTargets(shares: Share[]): Promise<Map<string, string>> {
     const folderIds = shares
       .filter((share) => share.targetType === 'FOLDER')

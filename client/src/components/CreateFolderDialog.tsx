@@ -28,7 +28,6 @@ export function CreateFolderDialog({
 }: CreateFolderDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      {/* Content unmounts on close, so the field starts empty every time. */}
       <DialogContent className="sm:max-w-md">
         <CreateFolderForm
           parentName={parentName}

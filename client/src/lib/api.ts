@@ -2,7 +2,6 @@ import { supabase } from './supabase';
 
 const BASE_URL = import.meta.env.VITE_API_URL;
 
-/** A non-2xx response from the API, carrying the status and the server's message. */
 export class ApiError extends Error {
   readonly status: number;
 
@@ -13,13 +12,6 @@ export class ApiError extends Error {
   }
 }
 
-/**
- * The one HTTP helper for the whole app. Do not write a second one.
- *
- * The access token is read from the live session on every call: it expires
- * after an hour and supabase-js rotates it in the background, so capturing it
- * once in a module variable or in state would sign the user out mid-session.
- */
 export async function apiFetch<T>(
   path: string,
   init?: RequestInit,
@@ -47,6 +39,9 @@ export async function apiFetch<T>(
 }
 
 async function readErrorMessage(response: Response): Promise<string> {
+  const fallback =
+    response.statusText || `Request failed with status ${response.status}`;
+
   try {
     const body: unknown = await response.json();
     const message = (body as { message?: unknown }).message;
@@ -54,12 +49,11 @@ async function readErrorMessage(response: Response): Promise<string> {
     if (typeof message === 'string') {
       return message;
     }
-    // class-validator reports one message per failed constraint.
     if (Array.isArray(message)) {
       return message.join(', ');
     }
+    return fallback;
   } catch {
-    // Body was empty or not JSON — fall through to the status line.
+    return fallback;
   }
-  return response.statusText || `Request failed with status ${response.status}`;
 }

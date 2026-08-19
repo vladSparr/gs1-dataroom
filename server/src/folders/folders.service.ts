@@ -42,11 +42,6 @@ export class FoldersService {
     };
   }
 
-  /**
-   * One page over a stream that runs folders first, then files, so a single
-   * cursor is enough. Only READY files are listed — an abandoned upload stays
-   * PENDING and stays invisible.
-   */
   async listChildren(
     userId: string,
     folderId: string,
@@ -98,7 +93,6 @@ export class FoldersService {
     const resolved = await this.resolveName(parentId, name);
 
     try {
-      // The path needs the new id, so it is written once the row exists.
       const created = await this.prisma.folder.create({
         data: {
           name: resolved,
@@ -132,7 +126,6 @@ export class FoldersService {
     }
 
     try {
-      // `path` is built from ids, so a rename touches no descendant rows.
       return toFolderResponse(
         await this.prisma.folder.update({
           where: { id: folderId },
@@ -156,12 +149,8 @@ export class FoldersService {
       );
     }
 
-    // Counted before the delete so the response can state what disappeared.
     const deleted = await this.statsFor(folder);
 
-    // The database cascade removes the rows without running any application
-    // code, so the blobs have to be collected first or they are orphaned with
-    // nothing left pointing at them. PENDING uploads count too.
     const doomed = await this.prisma.file.findMany({
       where: { folder: { path: { startsWith: folder.path } } },
       select: { storageKey: true },
@@ -178,11 +167,6 @@ export class FoldersService {
     return this.statsFor(folder);
   }
 
-  /**
-   * Two indexed prefix queries instead of a recursive walk. `folder.path`
-   * already contains the folder itself, so the folder count excludes it
-   * explicitly.
-   */
   private async statsFor(folder: Folder): Promise<FolderStatsDto> {
     const prefix = folder.path;
 
@@ -200,15 +184,10 @@ export class FoldersService {
     return {
       folderCount,
       fileCount: files._count,
-      // `_sum` is null when nothing matched.
       totalSize: (files._sum.size ?? BigInt(0)).toString(),
     };
   }
 
-  /**
-   * The path is an id chain, so the whole ancestor line is fetched in one
-   * query and reordered to match — no walking `parentId` in a loop.
-   */
   private async breadcrumbs(folder: Folder): Promise<BreadcrumbDto[]> {
     const ids = ancestorIds(folder.path);
 
@@ -232,7 +211,6 @@ export class FoldersService {
     return nextAvailableName(name, new Set(siblings.map((s) => s.name)));
   }
 
-  /** Two clients can race past the pre-check; the constraint is the backstop. */
   private translateNameConflict(error: unknown, name: string): unknown {
     if (
       error instanceof Prisma.PrismaClientKnownRequestError &&

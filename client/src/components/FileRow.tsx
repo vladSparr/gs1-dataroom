@@ -31,7 +31,6 @@ interface FileRowProps {
   file: FileItem;
   onPreview: () => void;
   onDownload: () => void;
-  /** Omitted in read-only views: Preview and Download remain, nothing else. */
   actions?: FileActions;
 }
 

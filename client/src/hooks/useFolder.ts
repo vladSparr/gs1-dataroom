@@ -17,7 +17,6 @@ export function useFolder(folderId: string | undefined) {
   });
 }
 
-/** Subfolders and READY files for one folder, in a single request. */
 export function useFolderChildren(folderId: string | undefined) {
   return useQuery({
     queryKey: ['folder', folderId, 'children'],
@@ -26,7 +25,6 @@ export function useFolderChildren(folderId: string | undefined) {
   });
 }
 
-/** Only enabled once the delete dialog opens — stats are not needed on load. */
 export function useFolderStats(folderId: string | undefined, enabled: boolean) {
   return useQuery({
     queryKey: ['folder', folderId, 'stats'],
@@ -35,11 +33,6 @@ export function useFolderStats(folderId: string | undefined, enabled: boolean) {
   });
 }
 
-/**
- * Any folder mutation shifts counts for every ancestor, so the whole `folder`
- * key is invalidated. Reconciling individual keys would be more code for no
- * user-visible gain at this scale.
- */
 function useFolderMutation<TArgs, TResult>(
   mutationFn: (args: TArgs) => Promise<TResult>,
 ) {
@@ -66,9 +59,6 @@ export function useRenameFolder() {
 export function useDeleteFolder() {
   return useFolderMutation((id: string) => deleteFolder(id));
 }
-
-// File mutations share the same invalidation: a move touches two folders, and
-// a rename changes the sort order of the listing it lives in.
 
 export function useRenameFile() {
   return useFolderMutation(({ id, name }: { id: string; name: string }) =>

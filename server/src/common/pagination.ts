@@ -6,10 +6,6 @@ export interface Page<T> {
   nextCursor: string | null;
 }
 
-/**
- * A full page implies there may be more, so the last id becomes the cursor.
- * A short page is the end of the list.
- */
 export function toPage<T extends { id: string }>(
   items: T[],
   limit: number,

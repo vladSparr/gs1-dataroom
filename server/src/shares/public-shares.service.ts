@@ -21,12 +21,6 @@ import type {
 
 const DOWNLOAD_TTL_SECONDS = 300;
 
-/**
- * Read-only views behind a share token. Every method takes an already-resolved
- * `Share` and re-checks that the requested resource sits inside its subtree —
- * without that, a token for a deep folder would let a caller pass arbitrary
- * ids and read the whole room.
- */
 @Injectable()
 export class PublicSharesService {
   constructor(
@@ -61,7 +55,6 @@ export class PublicSharesService {
       };
     }
 
-    // A room share opens on its root folder; a folder share on itself.
     const entry =
       share.targetType === 'DATA_ROOM'
         ? await this.prisma.folder.findFirst({
@@ -136,7 +129,6 @@ export class PublicSharesService {
     );
   }
 
-  /** The bucket is private, so a signed URL is the only way bytes reach a visitor. */
   async createDownloadUrl(
     share: Share,
     fileId: string,
@@ -154,16 +146,11 @@ export class PublicSharesService {
     };
   }
 
-  /**
-   * Crumbs stop at the share root: a recipient must never see the names of
-   * folders above what was shared with them.
-   */
   private async clippedBreadcrumbs(
     share: Share,
     path: string,
   ): Promise<BreadcrumbDto[]> {
     const ids = ancestorIds(path);
-    // targetPath segments minus the room id; a room share contributes none.
     const rootDepth = ancestorIds(share.targetPath).length;
     const visible = ids.slice(Math.max(0, rootDepth - 1));
 

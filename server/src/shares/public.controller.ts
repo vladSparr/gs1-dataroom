@@ -15,12 +15,6 @@ import type {
 } from './dto/share-response.dto';
 import { PublicSharesService } from './public-shares.service';
 
-/**
- * Recipient-facing. `@Public()` because a public link has to open for a
- * signed-out visitor; the token is the credential. A restricted share still
- * needs to know who is looking, which is why the guard attaches the user when
- * a valid session token happens to be present.
- */
 @Public()
 @Controller('public')
 export class PublicController {
@@ -73,7 +67,6 @@ export class PublicController {
     );
   }
 
-  /** One place decides whether this visitor may use this token. */
   private resolve(token: string, user?: AuthUser) {
     const viewer: Viewer = { userId: user?.id, email: user?.email };
     return this.access.resolveShare(token, viewer);

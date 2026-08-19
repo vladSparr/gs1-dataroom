@@ -32,7 +32,6 @@ export function PublicSharePage() {
   const share = useQuery({
     queryKey: ['public', token],
     queryFn: () => getPublicShare(token),
-    // 401 and 403 are answers, not failures: retrying cannot change them.
     retry: false,
   });
 
@@ -54,8 +53,6 @@ export function PublicSharePage() {
     }
   };
 
-  // A revocation mid-session surfaces on the next call; the whole page
-  // switches state rather than showing a toast over a stale listing.
   const blocker = statusOf(share.error) ?? statusOf(view.error);
   const sharedFile = share.data?.file ?? null;
 
@@ -154,7 +151,6 @@ export function PublicSharePage() {
   );
 }
 
-/** A single shared file has nothing to browse, so it opens straight to itself. */
 function SingleFile({
   file,
   onPreview,

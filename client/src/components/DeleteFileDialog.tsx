@@ -30,8 +30,6 @@ export function DeleteFileDialog({
         <AlertDialogHeader>
           <AlertDialogTitle>Delete “{file.name}”?</AlertDialogTitle>
           <AlertDialogDescription>
-            {/* The size is already known from the listing, so unlike folder
-                deletion there is nothing to fetch first. */}
             This permanently deletes the file ({formatBytes(file.size)}) and
             removes it from storage. This cannot be undone.
           </AlertDialogDescription>

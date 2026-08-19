@@ -10,8 +10,6 @@ import type {
   SharedWithMeItem,
 } from './types';
 
-// --- owner side -----------------------------------------------------------
-
 export function createShare(input: {
   targetType: ShareTargetType;
   targetId: string;
@@ -41,11 +39,6 @@ export function listSharedWithMe(): Promise<SharedWithMeItem[]> {
   return apiFetch<SharedWithMeItem[]>('/shared-with-me');
 }
 
-// --- recipient side -------------------------------------------------------
-// These still go through apiFetch: it attaches the session token when there
-// is one, which is exactly what a restricted link needs, and sends nothing
-// when the visitor is signed out.
-
 export function getPublicShare(token: string): Promise<PublicShare> {
   return apiFetch<PublicShare>(`/public/${token}`);
 }
@@ -73,7 +66,6 @@ export function getPublicDownloadUrl(
   return apiFetch<DownloadUrl>(`/public/${token}/files/${fileId}/download-url`);
 }
 
-/** The URL handed to a recipient. */
 export function shareLink(token: string): string {
   return `${window.location.origin}/s/${token}`;
 }

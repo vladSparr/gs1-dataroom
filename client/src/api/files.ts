@@ -45,12 +45,6 @@ export function deleteFile(fileId: string): Promise<void> {
   return apiFetch<void>(`/files/${fileId}`, { method: 'DELETE' });
 }
 
-/**
- * The one request that does not go through `apiFetch`: it PUTs to Supabase
- * Storage, not to our API, and it needs upload progress. `fetch` cannot report
- * that — there is no event for it — so this is XMLHttpRequest by necessity,
- * not by preference.
- */
 export function putToStorage(
   ticket: UploadTicket,
   file: File,
@@ -71,9 +65,7 @@ export function putToStorage(
     xhr.onabort = () => reject(new Error('Upload cancelled'));
 
     xhr.open('PUT', ticket.uploadUrl);
-    // The signed-upload token, not the user's session token.
     xhr.setRequestHeader('Authorization', `Bearer ${ticket.token}`);
-    // A retry reuses the same fileId, so the same key already exists.
     xhr.setRequestHeader('x-upsert', 'true');
     xhr.setRequestHeader('Content-Type', file.type || 'application/pdf');
 

@@ -9,7 +9,4 @@ if (!url || !anonKey) {
   );
 }
 
-// Defaults are deliberate: persistSession, autoRefreshToken and
-// detectSessionInUrl are all on, so the OAuth callback needs no manual
-// fragment parsing and the access token refreshes itself in the background.
 export const supabase = createClient(url, anonKey);

@@ -7,21 +7,14 @@ export type UploadStatus = 'queued' | 'uploading' | 'done' | 'error';
 export interface UploadItem {
   id: string;
   file: File;
-  /** 0..1 */
   progress: number;
   status: UploadStatus;
   error?: string;
-  /** Resolved by the server; may differ from file.name. */
   storedName?: string;
 }
 
-/**
- * Unlimited parallel uploads on a slow connection produce stalled bars and
- * browser connection-limit queuing that reads as a freeze.
- */
 const MAX_CONCURRENT = 3;
 
-/** How long the panel lingers after the last item settles. */
 const PANEL_LINGER_MS = 4000;
 
 export function useUploadQueue(folderId: string | undefined) {
@@ -32,9 +25,6 @@ export function useUploadQueue(folderId: string | undefined) {
   const workers = useRef(0);
   const clearTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Retry needs the current items without capturing them in its own deps,
-  // and enqueueing from inside a state updater would double up under
-  // StrictMode, which invokes updaters twice.
   const latest = useRef<UploadItem[]>([]);
   useEffect(() => {
     latest.current = items;
@@ -51,13 +41,11 @@ export function useUploadQueue(folderId: string | undefined) {
 
     clearTimer.current = setTimeout(() => {
       setItems((current) =>
-        // Failures stay on screen: they still need a decision from the user.
         current.some((item) => item.status === 'error') ? current : [],
       );
     }, PANEL_LINGER_MS);
   }, []);
 
-  /** The four-step sequence for one file. Never throws. */
   const uploadOne = useCallback(
     async (item: UploadItem, targetFolderId: string) => {
       patch(item.id, { status: 'uploading', progress: 0, error: undefined });
@@ -75,13 +63,11 @@ export function useUploadQueue(folderId: string | undefined) {
         );
         await completeUpload(ticket.fileId, item.file.size);
 
-        // Show the name the server settled on, not the one we sent.
         patch(item.id, { status: 'done', progress: 1, storedName: ticket.name });
         await queryClient.invalidateQueries({
           queryKey: ['folder', targetFolderId, 'children'],
         });
       } catch (error) {
-        // One failure must not abort the rest of the batch.
         patch(item.id, {
           status: 'error',
           error: error instanceof Error ? error.message : 'Upload failed',
@@ -91,7 +77,6 @@ export function useUploadQueue(folderId: string | undefined) {
     [patch, queryClient],
   );
 
-  /** Pulls from the queue until it is empty, then retires. */
   const worker = useCallback(
     async (targetFolderId: string) => {
       workers.current += 1;

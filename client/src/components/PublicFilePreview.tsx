@@ -16,7 +16,6 @@ interface PublicFilePreviewProps {
   onOpenChange: (open: boolean) => void;
 }
 
-/** The recipient's preview: same layout as the owner's, different endpoint. */
 export function PublicFilePreview({
   token,
   file,

@@ -30,7 +30,6 @@ export function DeleteFolderDialog({
   pending,
   onConfirm,
 }: DeleteFolderDialogProps) {
-  // Fetched when the dialog opens, not on page load.
   const stats = useFolderStats(folderId, open);
 
   return (
@@ -60,7 +59,6 @@ export function DeleteFolderDialog({
         <AlertDialogFooter>
           <AlertDialogCancel disabled={pending}>Cancel</AlertDialogCancel>
           <AlertDialogAction
-            // Never let someone confirm a deletion whose size is still unknown.
             disabled={!stats.isSuccess || pending}
             onClick={(event) => {
               event.preventDefault();

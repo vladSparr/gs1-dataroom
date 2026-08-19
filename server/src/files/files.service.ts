@@ -28,11 +28,6 @@ export class FilesService {
     private readonly storage: StorageService,
   ) {}
 
-  /**
-   * Creates the row before signing: the storage key contains the file id, so
-   * the id has to exist first. The row stays PENDING and invisible until the
-   * browser reports the transfer finished.
-   */
   async createUploadTicket(
     userId: string,
     folderId: string,
@@ -55,12 +50,10 @@ export class FilesService {
         status: 'PENDING',
         dataRoomId: folder.dataRoomId,
         folderId,
-        // Placeholder: the key needs the generated id.
         storageKey: `pending/${crypto.randomUUID()}`,
       },
     });
 
-    // Names never appear in storage keys, so a rename touches the database only.
     const storageKey = `${folder.dataRoomId}/${file.id}`;
     await this.prisma.file.update({
       where: { id: file.id },
@@ -73,7 +66,6 @@ export class FilesService {
     return { fileId: file.id, name: resolved, uploadUrl: signedUrl, token };
   }
 
-  /** Flips PENDING to READY once the object is actually in the bucket. */
   async completeUpload(
     userId: string,
     fileId: string,
@@ -88,7 +80,6 @@ export class FilesService {
     return toFileResponse(
       await this.prisma.file.update({
         where: { id: fileId },
-        // The measured size wins over the estimate sent before the transfer.
         data: { status: 'READY', size: BigInt(size) },
       }),
     );
@@ -163,7 +154,6 @@ export class FilesService {
     const name = await this.resolveName(destinationId, file.name);
 
     try {
-      // Storage is untouched: the key holds ids, not the location.
       return toFileResponse(
         await this.prisma.file.update({
           where: { id: fileId },
@@ -175,10 +165,6 @@ export class FilesService {
     }
   }
 
-  /**
-   * Blob first, row second. An orphaned row can be found and cleaned up; an
-   * orphaned blob that nothing references cannot.
-   */
   async remove(userId: string, fileId: string): Promise<void> {
     const file = await this.assertFileAccess(userId, fileId);
 
@@ -186,7 +172,6 @@ export class FilesService {
     await this.prisma.file.delete({ where: { id: fileId } });
   }
 
-  /** Reads through the same gate as folders, via the file's parent. */
   private async assertFileAccess(
     userId: string,
     fileId: string,
@@ -206,7 +191,6 @@ export class FilesService {
       select: { name: true },
     });
 
-    // Split so "Report.pdf" becomes "Report (2).pdf", not "Report.pdf (2)".
     const [stem, extension] = splitExtension(name);
     const taken = new Set(
       siblings

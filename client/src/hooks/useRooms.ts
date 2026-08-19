@@ -35,7 +35,6 @@ export function useRenameRoom() {
     mutationFn: ({ id, name }: { id: string; name: string }) =>
       renameRoom(id, name),
     onSuccess: async () => {
-      // The root folder is renamed with the room, so breadcrumbs go stale too.
       await queryClient.invalidateQueries({ queryKey: ['rooms'] });
       await queryClient.invalidateQueries({ queryKey: ['folder'] });
     },

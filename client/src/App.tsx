@@ -15,9 +15,6 @@ export default function App() {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/auth/callback" element={<AuthCallbackPage />} />
 
-      {/* Deliberately outside RequireAuth: a public link has to open for a
-          signed-out visitor. Wrapping these is the classic way the feature
-          silently stops working. */}
       <Route path="/s/:token" element={<PublicSharePage />} />
       <Route path="/s/:token/f/:folderId" element={<PublicSharePage />} />
 

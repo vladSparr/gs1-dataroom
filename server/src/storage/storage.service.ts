@@ -2,12 +2,6 @@ import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { createClient } from '@supabase/supabase-js';
 
-/**
- * The only file on the server that touches Supabase Storage or holds the
- * service role key. Bytes never pass through this API: the browser uploads
- * straight to a signed URL, so a large PDF cannot occupy the single worker
- * for the length of a transfer.
- */
 @Injectable()
 export class StorageService {
   private readonly bucket: ReturnType<
@@ -18,7 +12,6 @@ export class StorageService {
     const client = createClient(
       config.getOrThrow<string>('SUPABASE_URL'),
       config.getOrThrow<string>('SUPABASE_SERVICE_ROLE_KEY'),
-      // Nothing to persist: the key is static and the client is per-process.
       { auth: { persistSession: false } },
     );
 
@@ -30,7 +23,6 @@ export class StorageService {
   async createSignedUploadUrl(
     key: string,
   ): Promise<{ signedUrl: string; token: string }> {
-    // upsert: a retry of a failed upload reuses the same fileId, so the same key.
     const { data, error } = await this.bucket.createSignedUploadUrl(key, {
       upsert: true,
     });
@@ -56,7 +48,6 @@ export class StorageService {
     return data.signedUrl;
   }
 
-  /** Guards `complete` against a client that never uploaded anything. */
   async exists(key: string): Promise<boolean> {
     const separator = key.lastIndexOf('/');
     const prefix = key.slice(0, separator);

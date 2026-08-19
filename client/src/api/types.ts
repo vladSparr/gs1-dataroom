@@ -1,4 +1,3 @@
-/** Response shapes returned by the API. Mirrors the server's dto/ folders. */
 
 export interface Me {
   id: string;
@@ -37,7 +36,6 @@ export interface FolderDetail extends Folder {
 export interface FileItem {
   id: string;
   name: string;
-  /** BigInt over the wire; parse with Number(). */
   size: string;
   mimeType: string;
   folderId: string;
@@ -46,20 +44,14 @@ export interface FileItem {
   updatedAt: string;
 }
 
-/**
- * Folders and files stay separate: they sort differently and carry different
- * columns, so merging them would buy nothing.
- */
 export interface FolderChildren {
   folders: Folder[];
   files: FileItem[];
   nextCursor: string | null;
 }
 
-/** Everything the browser needs to PUT bytes straight to storage. */
 export interface UploadTicket {
   fileId: string;
-  /** Resolved server-side — may differ from the name that was requested. */
   name: string;
   uploadUrl: string;
   token: string;
@@ -70,7 +62,6 @@ export interface DownloadUrl {
   expiresAt: string;
 }
 
-/** Flat folder list for the move picker, ordered so parents precede children. */
 export interface RoomFolder {
   id: string;
   name: string;
@@ -81,7 +72,6 @@ export interface RoomFolder {
 export interface FolderStats {
   folderCount: number;
   fileCount: number;
-  /** BigInt serialised as a string; parse with Number(). */
   totalSize: string;
 }
 
@@ -104,7 +94,6 @@ export interface Share {
   targetId: string;
   mode: ShareMode;
   role: 'VIEWER' | 'EDITOR';
-  /** Emails this was granted to; empty for a public link. */
   grantedTo: string[];
   createdAt: string;
 }
@@ -120,13 +109,11 @@ export interface SharedWithMeItem {
   sharedAt: string;
 }
 
-/** What a share link opens onto. */
 export interface PublicShare {
   targetType: ShareTargetType;
   mode: ShareMode;
   name: string;
   ownerName: string | null;
-  /** Where browsing starts; null when a single file was shared. */
   rootFolderId: string | null;
   file: FileItem | null;
 }

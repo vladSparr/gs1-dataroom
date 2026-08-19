@@ -13,7 +13,6 @@ export class CreateUploadDto {
   @Length(1, 255)
   name!: string;
 
-  /** The client's estimate, used only to enforce the limit up front. */
   @Type(() => Number)
   @IsInt()
   @Min(1)

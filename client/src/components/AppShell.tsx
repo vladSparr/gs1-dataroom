@@ -22,7 +22,6 @@ export function AppShell() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  // This is also what creates the `users` row on a first sign-in.
   const me = useQuery({
     queryKey: ['me'],
     queryFn: () => apiFetch<Me>('/me'),
@@ -60,7 +59,6 @@ export function AppShell() {
         {me.isPending ? (
           <Skeleton className="size-8 rounded-full" />
         ) : me.isError ? (
-          // Never trap the user behind a failed profile load.
           <Button variant="ghost" size="sm" onClick={() => void handleSignOut()}>
             <LogOutIcon />
             Sign out

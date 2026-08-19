@@ -32,7 +32,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signInWithGoogle = useCallback(async () => {
-    // window.location.origin keeps one build working on localhost and on Vercel.
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: { redirectTo: `${window.location.origin}/auth/callback` },
@@ -56,7 +55,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [session, loading, signInWithGoogle, signOut],
   );
 
-  // A blank frame before the redirect to /login reads as a broken app.
   if (loading) {
     return (
       <div className="flex min-h-screen flex-col">

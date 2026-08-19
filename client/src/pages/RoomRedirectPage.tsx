@@ -3,7 +3,6 @@ import { Loader2Icon } from 'lucide-react';
 import { ErrorState } from '@/components/ErrorState';
 import { useRoom } from '@/hooks/useRooms';
 
-/** `/rooms/:roomId` is a stable entry point; the UI lives on the root folder. */
 export function RoomRedirectPage() {
   const { roomId } = useParams<{ roomId: string }>();
   const room = useRoom(roomId);

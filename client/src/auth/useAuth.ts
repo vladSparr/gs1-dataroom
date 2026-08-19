@@ -9,8 +9,6 @@ export interface AuthContextValue {
   signOut: () => Promise<void>;
 }
 
-// The context lives here rather than in AuthProvider.tsx: react-refresh only
-// allows component exports from a .tsx file.
 export const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function useAuth(): AuthContextValue {

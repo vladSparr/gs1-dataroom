@@ -9,12 +9,9 @@ export function AuthCallbackPage() {
   const location = useLocation();
 
   if (session) {
-    // A restricted share link parks its path before leaving for Google.
     return <Navigate to={takeReturnPath() ?? '/'} replace />;
   }
 
-  // Supabase reports a refused consent on the URL. Without this the page would
-  // spin forever waiting for a session that is never coming.
   const error = readAuthError(location.search, location.hash);
   if (error) {
     return (
@@ -40,11 +37,6 @@ export function AuthCallbackPage() {
   );
 }
 
-/**
- * The error may arrive as a query string or as a URL fragment depending on the
- * flow. The session itself is left to `detectSessionInUrl` — parsing the
- * fragment by hand is a reliable source of race conditions.
- */
 function readAuthError(search: string, hash: string): string | null {
   for (const source of [search, hash]) {
     const params = new URLSearchParams(source.replace(/^[?#]/, ''));

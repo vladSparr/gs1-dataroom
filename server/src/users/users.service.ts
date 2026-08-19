@@ -7,10 +7,6 @@ import type { AuthUser } from '../auth/auth.types';
 export class UsersService {
   constructor(private readonly prisma: PrismaService) {}
 
-  /**
-   * Mirrors the verified token into `users`. Creates the row on first sign-in
-   * and refreshes it afterwards, so a changed Google name or avatar propagates.
-   */
   async upsertFromToken(user: AuthUser): Promise<User> {
     const profile = {
       email: user.email,
