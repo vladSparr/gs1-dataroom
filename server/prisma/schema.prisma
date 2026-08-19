@@ -1,0 +1,153 @@
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id        String   @id @db.Uuid
+  email     String   @unique @db.VarChar()
+  name      String?  @db.VarChar()
+  avatarUrl String?  @map("avatar_url") @db.VarChar()
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz()
+
+  // relations
+  dataRooms   DataRoom[]
+  shareGrants ShareGrant[]
+
+  @@map("users")
+}
+
+model DataRoom {
+  id        String   @id @default(uuid())
+  name      String   @db.VarChar()
+  ownerId   String   @map("owner_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz()
+
+  // relations
+  owner   User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  folders Folder[]
+  files   File[]
+  shares  Share[]
+
+  @@index([ownerId, createdAt])
+  @@map("data_rooms")
+}
+
+model Folder {
+  id         String   @id @default(uuid())
+  name       String   @db.VarChar()
+  path       String   @db.VarChar()
+  depth      Int      @default(0)
+  dataRoomId String   @map("data_room_id")
+  parentId   String?  @map("parent_id")
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt  DateTime @updatedAt @map("updated_at") @db.Timestamptz()
+
+  // relations
+  dataRoom DataRoom @relation(fields: [dataRoomId], references: [id], onDelete: Cascade)
+  parent   Folder?  @relation("FolderTree", fields: [parentId], references: [id], onDelete: Cascade)
+  children Folder[] @relation("FolderTree")
+  files    File[]
+
+  @@unique([parentId, name])
+  @@index([dataRoomId, parentId, name])
+  @@index([path])
+  @@map("folders")
+}
+
+model File {
+  id         String     @id @default(uuid())
+  name       String     @db.VarChar()
+  size       BigInt     @default(0)
+  mimeType   String     @map("mime_type") @db.VarChar()
+  storageKey String     @unique @map("storage_key") @db.VarChar()
+  status     FileStatus @default(PENDING)
+  dataRoomId String     @map("data_room_id")
+  folderId   String     @map("folder_id")
+  createdAt  DateTime   @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt  DateTime   @updatedAt @map("updated_at") @db.Timestamptz()
+
+  // relations
+  dataRoom DataRoom @relation(fields: [dataRoomId], references: [id], onDelete: Cascade)
+  folder   Folder   @relation(fields: [folderId], references: [id], onDelete: Cascade)
+
+  @@unique([folderId, name])
+  @@index([folderId, status, name])
+  @@index([dataRoomId, status])
+  @@map("files")
+}
+
+model Share {
+  id          String          @id @default(uuid())
+  token       String          @unique @db.VarChar()
+  targetType  ShareTargetType @map("target_type")
+  targetId    String          @map("target_id")
+  targetPath  String          @map("target_path") @db.VarChar()
+  mode        ShareMode
+  role        ShareRole       @default(VIEWER)
+  dataRoomId  String          @map("data_room_id")
+  createdById String          @map("created_by_id") @db.Uuid
+  revokedAt   DateTime?       @map("revoked_at") @db.Timestamptz()
+  createdAt   DateTime        @default(now()) @map("created_at") @db.Timestamptz()
+
+  // relations
+  dataRoom DataRoom     @relation(fields: [dataRoomId], references: [id], onDelete: Cascade)
+  grants   ShareGrant[]
+
+  @@index([targetType, targetId, revokedAt])
+  @@index([dataRoomId, revokedAt])
+  @@map("shares")
+}
+
+model ShareGrant {
+  id        String    @id @default(uuid())
+  shareId   String    @map("share_id")
+  email     String    @db.VarChar()
+  userId    String?   @map("user_id") @db.Uuid
+  role      ShareRole @default(VIEWER)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+
+  // relations
+  share Share @relation(fields: [shareId], references: [id], onDelete: Cascade)
+  user  User? @relation(fields: [userId], references: [id])
+
+  @@unique([shareId, email])
+  @@index([email])
+  @@map("share_grants")
+}
+
+enum FileStatus {
+  PENDING
+  READY
+
+  @@map("file_status")
+}
+
+enum ShareTargetType {
+  DATA_ROOM
+  FOLDER
+  FILE
+
+  @@map("share_target_type")
+}
+
+enum ShareMode {
+  PUBLIC_LINK
+  RESTRICTED
+
+  @@map("share_mode")
+}
+
+enum ShareRole {
+  VIEWER
+  EDITOR
+
+  @@map("share_role")
+}

@@ -1,22 +1,22 @@
-import { useEffect, useState } from "react";
-
-const API = import.meta.env.VITE_API_URL;
+import { Navigate, Route, Routes } from 'react-router-dom';
+import { RequireAuth } from '@/auth/RequireAuth';
+import { AppShell } from '@/components/AppShell';
+import { AuthCallbackPage } from '@/pages/AuthCallbackPage';
+import { HomePage } from '@/pages/HomePage';
+import { LoginPage } from '@/pages/LoginPage';
 
 export default function App() {
-  const [status, setStatus] = useState("Loading...");
-
-  useEffect(() => {
-    fetch(`${API}/health`)
-      .then((r) => r.json())
-      .then((d) => setStatus(JSON.stringify(d)))
-      .catch((e) => setStatus(`Error: ${e.message}`));
-  }, []);
-
   return (
-    <div className="min-h-screen flex items-center justify-center bg-neutral-50">
-      <div className="rounded-lg border bg-white px-6 py-4 font-mono text-sm">
-        {status}
-      </div>
-    </div>
+    <Routes>
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/auth/callback" element={<AuthCallbackPage />} />
+
+      <Route element={<RequireAuth />}>
+        <Route element={<AppShell />}>
+          <Route path="/" element={<HomePage />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Route>
+      </Route>
+    </Routes>
   );
 }

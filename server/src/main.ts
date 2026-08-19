@@ -1,3 +1,4 @@
+import './common/bigint';
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
@@ -18,4 +19,4 @@ async function bootstrap() {
   await app.listen(port, '0.0.0.0');
   console.log(`API listening on :${port}`);
 }
-bootstrap();
+void bootstrap();
