@@ -6,6 +6,7 @@ import {
   MoreHorizontalIcon,
   PencilIcon,
   PlusIcon,
+  Share2Icon,
   Trash2Icon,
 } from 'lucide-react';
 import {
@@ -31,6 +32,8 @@ import { CreateRoomDialog } from '@/components/CreateRoomDialog';
 import { EmptyState } from '@/components/EmptyState';
 import { ErrorState } from '@/components/ErrorState';
 import { RenameDialog } from '@/components/RenameDialog';
+import { ShareDialog } from '@/components/ShareDialog';
+import type { ShareTarget } from '@/hooks/useShares';
 import {
   useCreateRoom,
   useDeleteRoom,
@@ -51,6 +54,7 @@ export function RoomsPage() {
   const [creating, setCreating] = useState(false);
   const [renaming, setRenaming] = useState<Room | null>(null);
   const [deleting, setDeleting] = useState<Room | null>(null);
+  const [sharing, setSharing] = useState<ShareTarget | null>(null);
 
   const handleCreate = (name: string) => {
     create.mutate(name, {
@@ -165,6 +169,18 @@ export function RoomsPage() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
+                        <DropdownMenuItem
+                          onSelect={() =>
+                            setSharing({
+                              type: 'DATA_ROOM',
+                              id: room.id,
+                              name: room.name,
+                            })
+                          }
+                        >
+                          <Share2Icon />
+                          Share
+                        </DropdownMenuItem>
                         <DropdownMenuItem onSelect={() => setRenaming(room)}>
                           <PencilIcon />
                           Rename
@@ -192,6 +208,13 @@ export function RoomsPage() {
         pending={create.isPending}
         onSubmit={handleCreate}
       />
+
+      {sharing && (
+        <ShareDialog
+          target={sharing}
+          onOpenChange={(open) => !open && setSharing(null)}
+        />
+      )}
 
       <RenameDialog
         open={renaming !== null}

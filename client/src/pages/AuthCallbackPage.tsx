@@ -2,13 +2,15 @@ import { Link, Navigate, useLocation } from 'react-router-dom';
 import { Loader2Icon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/auth/useAuth';
+import { takeReturnPath } from '@/auth/returnPath';
 
 export function AuthCallbackPage() {
   const { session } = useAuth();
   const location = useLocation();
 
   if (session) {
-    return <Navigate to="/" replace />;
+    // A restricted share link parks its path before leaving for Google.
+    return <Navigate to={takeReturnPath() ?? '/'} replace />;
   }
 
   // Supabase reports a refused consent on the URL. Without this the page would

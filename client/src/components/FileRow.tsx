@@ -5,6 +5,7 @@ import {
   FolderInputIcon,
   MoreHorizontalIcon,
   PencilIcon,
+  Share2Icon,
   Trash2Icon,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -19,22 +20,26 @@ import { TableCell, TableRow } from '@/components/ui/table';
 import { formatBytes, formatDate } from '@/lib/format';
 import type { FileItem } from '@/api/types';
 
+export interface FileActions {
+  onRename: () => void;
+  onMove: () => void;
+  onDelete: () => void;
+  onShare: () => void;
+}
+
 interface FileRowProps {
   file: FileItem;
   onPreview: () => void;
   onDownload: () => void;
-  onRename: () => void;
-  onMove: () => void;
-  onDelete: () => void;
+  /** Omitted in read-only views: Preview and Download remain, nothing else. */
+  actions?: FileActions;
 }
 
 export function FileRow({
   file,
   onPreview,
   onDownload,
-  onRename,
-  onMove,
-  onDelete,
+  actions,
 }: FileRowProps) {
   return (
     <TableRow className="cursor-pointer" onClick={onPreview}>
@@ -74,20 +79,32 @@ export function FileRow({
                 <DownloadIcon />
                 Download
               </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onSelect={onRename}>
-                <PencilIcon />
-                Rename
-              </DropdownMenuItem>
-              <DropdownMenuItem onSelect={onMove}>
-                <FolderInputIcon />
-                Move
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem variant="destructive" onSelect={onDelete}>
-                <Trash2Icon />
-                Delete
-              </DropdownMenuItem>
+
+              {actions && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onSelect={actions.onShare}>
+                    <Share2Icon />
+                    Share
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onSelect={actions.onRename}>
+                    <PencilIcon />
+                    Rename
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onSelect={actions.onMove}>
+                    <FolderInputIcon />
+                    Move
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    variant="destructive"
+                    onSelect={actions.onDelete}
+                  >
+                    <Trash2Icon />
+                    Delete
+                  </DropdownMenuItem>
+                </>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>

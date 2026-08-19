@@ -1,4 +1,10 @@
-import { FolderIcon, MoreHorizontalIcon, PencilIcon, Trash2Icon } from 'lucide-react';
+import {
+  FolderIcon,
+  MoreHorizontalIcon,
+  PencilIcon,
+  Share2Icon,
+  Trash2Icon,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -8,22 +14,22 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { TableCell, TableRow } from '@/components/ui/table';
 
+export interface FolderActions {
+  onRename: () => void;
+  onDelete: () => void;
+  onShare: () => void;
+}
+
 interface ItemRowProps {
   name: string;
   meta: string;
   onOpen: () => void;
-  onRename: () => void;
-  onDelete: () => void;
+  /** Omitted in read-only views, which then render no menu at all. */
+  actions?: FolderActions;
 }
 
-/** One folder in a listing. Files reuse this row in step 04. */
-export function ItemRow({
-  name,
-  meta,
-  onOpen,
-  onRename,
-  onDelete,
-}: ItemRowProps) {
+/** One folder in a listing. */
+export function ItemRow({ name, meta, onOpen, actions }: ItemRowProps) {
   return (
     <TableRow className="cursor-pointer" onClick={onOpen}>
       <TableCell>
@@ -33,31 +39,46 @@ export function ItemRow({
         </div>
       </TableCell>
 
+      <TableCell className="text-right text-sm text-muted-foreground">—</TableCell>
+
       <TableCell className="text-right text-sm text-muted-foreground">
         {meta}
       </TableCell>
 
       <TableCell className="w-12">
-        {/* Stops the row's navigation from firing when using the menu. */}
-        <div onClick={(event) => event.stopPropagation()}>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon-sm" aria-label={`Actions for ${name}`}>
-                <MoreHorizontalIcon />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onSelect={onRename}>
-                <PencilIcon />
-                Rename
-              </DropdownMenuItem>
-              <DropdownMenuItem variant="destructive" onSelect={onDelete}>
-                <Trash2Icon />
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+        {actions && (
+          // Stops the row's navigation from firing when using the menu.
+          <div onClick={(event) => event.stopPropagation()}>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  aria-label={`Actions for ${name}`}
+                >
+                  <MoreHorizontalIcon />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onSelect={actions.onShare}>
+                  <Share2Icon />
+                  Share
+                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={actions.onRename}>
+                  <PencilIcon />
+                  Rename
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  variant="destructive"
+                  onSelect={actions.onDelete}
+                >
+                  <Trash2Icon />
+                  Delete
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        )}
       </TableCell>
     </TableRow>
   );

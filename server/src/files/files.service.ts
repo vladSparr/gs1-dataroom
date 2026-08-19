@@ -9,6 +9,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { AccessService } from '../access/access.service';
 import { StorageService } from '../storage/storage.service';
 import { nextAvailableName, splitExtension } from '../common/naming';
+import { toFileResponse } from '../common/mappers';
 import type {
   DownloadUrlDto,
   FileResponseDto,
@@ -84,7 +85,7 @@ export class FilesService {
       throw new BadRequestException('The upload did not reach storage.');
     }
 
-    return this.toResponse(
+    return toFileResponse(
       await this.prisma.file.update({
         where: { id: fileId },
         // The measured size wins over the estimate sent before the transfer.
@@ -94,7 +95,7 @@ export class FilesService {
   }
 
   async get(userId: string, fileId: string): Promise<FileResponseDto> {
-    return this.toResponse(await this.assertFileAccess(userId, fileId));
+    return toFileResponse(await this.assertFileAccess(userId, fileId));
   }
 
   async createDownloadUrl(
@@ -124,11 +125,11 @@ export class FilesService {
     const file = await this.assertFileAccess(userId, fileId);
 
     if (file.name === name) {
-      return this.toResponse(file);
+      return toFileResponse(file);
     }
 
     try {
-      return this.toResponse(
+      return toFileResponse(
         await this.prisma.file.update({
           where: { id: fileId },
           data: { name },
@@ -156,14 +157,14 @@ export class FilesService {
       );
     }
     if (destination.id === file.folderId) {
-      return this.toResponse(file);
+      return toFileResponse(file);
     }
 
     const name = await this.resolveName(destinationId, file.name);
 
     try {
       // Storage is untouched: the key holds ids, not the location.
-      return this.toResponse(
+      return toFileResponse(
         await this.prisma.file.update({
           where: { id: fileId },
           data: { folderId: destinationId, name },
@@ -226,18 +227,5 @@ export class FilesService {
       );
     }
     return error;
-  }
-
-  private toResponse(file: File): FileResponseDto {
-    return {
-      id: file.id,
-      name: file.name,
-      size: file.size.toString(),
-      mimeType: file.mimeType,
-      folderId: file.folderId,
-      dataRoomId: file.dataRoomId,
-      createdAt: file.createdAt,
-      updatedAt: file.updatedAt,
-    };
   }
 }

@@ -3,13 +3,17 @@ import {
   ConflictException,
   Injectable,
 } from '@nestjs/common';
-import { Prisma, type File, type Folder } from '@prisma/client';
+import { Prisma, type Folder } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { AccessService } from '../access/access.service';
 import { StorageService } from '../storage/storage.service';
 import { nextAvailableName } from '../common/naming';
 import { DEFAULT_PAGE_SIZE } from '../common/pagination';
-import type { FileResponseDto } from '../files/dto/file-response.dto';
+import {
+  ancestorIds,
+  toFileResponse,
+  toFolderResponse,
+} from '../common/mappers';
 import type {
   BreadcrumbDto,
   DeleteFolderResultDto,
@@ -33,7 +37,7 @@ export class FoldersService {
     const folder = await this.access.assertFolderAccess(userId, folderId);
 
     return {
-      ...this.toResponse(folder),
+      ...toFolderResponse(folder),
       breadcrumbs: await this.breadcrumbs(folder),
     };
   }
@@ -79,8 +83,8 @@ export class FoldersService {
     const full = folders.length + files.length === limit;
 
     return {
-      folders: folders.map((folder) => this.toResponse(folder)),
-      files: files.map((file) => this.toFileResponse(file)),
+      folders: folders.map((folder) => toFolderResponse(folder)),
+      files: files.map((file) => toFileResponse(file)),
       nextCursor: full && last ? last.id : null,
     };
   }
@@ -105,7 +109,7 @@ export class FoldersService {
         },
       });
 
-      return this.toResponse(
+      return toFolderResponse(
         await this.prisma.folder.update({
           where: { id: created.id },
           data: { path: `${parent.path}${created.id}/` },
@@ -124,12 +128,12 @@ export class FoldersService {
     const folder = await this.access.assertFolderAccess(userId, folderId);
 
     if (folder.name === name) {
-      return this.toResponse(folder);
+      return toFolderResponse(folder);
     }
 
     try {
       // `path` is built from ids, so a rename touches no descendant rows.
-      return this.toResponse(
+      return toFolderResponse(
         await this.prisma.folder.update({
           where: { id: folderId },
           data: { name },
@@ -206,7 +210,7 @@ export class FoldersService {
    * query and reordered to match — no walking `parentId` in a loop.
    */
   private async breadcrumbs(folder: Folder): Promise<BreadcrumbDto[]> {
-    const ids = folder.path.split('/').filter(Boolean).slice(1);
+    const ids = ancestorIds(folder.path);
 
     const found = await this.prisma.folder.findMany({
       where: { id: { in: ids } },
@@ -239,30 +243,5 @@ export class FoldersService {
       );
     }
     return error;
-  }
-
-  private toFileResponse(file: File): FileResponseDto {
-    return {
-      id: file.id,
-      name: file.name,
-      size: file.size.toString(),
-      mimeType: file.mimeType,
-      folderId: file.folderId,
-      dataRoomId: file.dataRoomId,
-      createdAt: file.createdAt,
-      updatedAt: file.updatedAt,
-    };
-  }
-
-  private toResponse(folder: Folder): FolderResponseDto {
-    return {
-      id: folder.id,
-      name: folder.name,
-      dataRoomId: folder.dataRoomId,
-      parentId: folder.parentId,
-      depth: folder.depth,
-      createdAt: folder.createdAt,
-      updatedAt: folder.updatedAt,
-    };
   }
 }

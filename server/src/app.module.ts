@@ -11,6 +11,7 @@ import { StorageModule } from './storage/storage.module';
 import { RoomsModule } from './rooms/rooms.module';
 import { FoldersModule } from './folders/folders.module';
 import { FilesModule } from './files/files.module';
+import { SharesModule } from './shares/shares.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { FilesModule } from './files/files.module';
     RoomsModule,
     FoldersModule,
     FilesModule,
+    SharesModule,
   ],
   controllers: [AppController],
   providers: [{ provide: APP_GUARD, useClass: JwtGuard }],

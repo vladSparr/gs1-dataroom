@@ -1,4 +1,4 @@
-import { Link, Outlet, useNavigate } from 'react-router-dom';
+import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { LogOutIcon } from 'lucide-react';
@@ -41,9 +41,21 @@ export function AppShell() {
   return (
     <div className="flex min-h-screen flex-col">
       <header className="flex h-14 items-center justify-between border-b px-6">
-        <Link to="/" className="text-sm font-semibold tracking-tight">
-          GS1 Data Room
-        </Link>
+        <nav className="flex items-center gap-6">
+          <Link to="/" className="text-sm font-semibold tracking-tight">
+            GS1 Data Room
+          </Link>
+          <NavLink
+            to="/shared-with-me"
+            className={({ isActive }) =>
+              isActive
+                ? 'text-sm font-medium text-foreground'
+                : 'text-sm text-muted-foreground transition-colors hover:text-foreground'
+            }
+          >
+            Shared with me
+          </NavLink>
+        </nav>
 
         {me.isPending ? (
           <Skeleton className="size-8 rounded-full" />

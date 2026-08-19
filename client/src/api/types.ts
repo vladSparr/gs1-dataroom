@@ -93,3 +93,49 @@ export interface Page<T> {
   items: T[];
   nextCursor: string | null;
 }
+
+export type ShareTargetType = 'DATA_ROOM' | 'FOLDER' | 'FILE';
+export type ShareMode = 'PUBLIC_LINK' | 'RESTRICTED';
+
+export interface Share {
+  id: string;
+  token: string;
+  targetType: ShareTargetType;
+  targetId: string;
+  mode: ShareMode;
+  role: 'VIEWER' | 'EDITOR';
+  /** Emails this was granted to; empty for a public link. */
+  grantedTo: string[];
+  createdAt: string;
+}
+
+export interface SharedWithMeItem {
+  shareId: string;
+  token: string;
+  targetType: ShareTargetType;
+  targetId: string;
+  name: string;
+  roomName: string;
+  ownerName: string | null;
+  sharedAt: string;
+}
+
+/** What a share link opens onto. */
+export interface PublicShare {
+  targetType: ShareTargetType;
+  mode: ShareMode;
+  name: string;
+  ownerName: string | null;
+  /** Where browsing starts; null when a single file was shared. */
+  rootFolderId: string | null;
+  file: FileItem | null;
+}
+
+export interface PublicFolderView {
+  id: string;
+  name: string;
+  breadcrumbs: Breadcrumb[];
+  folders: Folder[];
+  files: FileItem[];
+  nextCursor: string | null;
+}

@@ -1,17 +1,13 @@
 import { useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
-import { FolderPlusIcon, PlusIcon, UploadIcon } from 'lucide-react';
+import { FolderPlusIcon, PlusIcon, Share2Icon, UploadIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+  ContentsTable,
+  ContentsTableSkeleton,
+} from '@/components/ContentsTable';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
 import { CreateFolderDialog } from '@/components/CreateFolderDialog';
 import { DeleteFileDialog } from '@/components/DeleteFileDialog';
@@ -19,10 +15,10 @@ import { DeleteFolderDialog } from '@/components/DeleteFolderDialog';
 import { EmptyState } from '@/components/EmptyState';
 import { ErrorState } from '@/components/ErrorState';
 import { FilePreviewDialog } from '@/components/FilePreviewDialog';
-import { FileRow } from '@/components/FileRow';
-import { ItemRow } from '@/components/ItemRow';
 import { MoveFileDialog } from '@/components/MoveFileDialog';
 import { RenameDialog } from '@/components/RenameDialog';
+import { ShareDialog } from '@/components/ShareDialog';
+import type { ShareTarget } from '@/hooks/useShares';
 import { UploadDropzone } from '@/components/UploadDropzone';
 import { UploadQueue } from '@/components/UploadQueue';
 import {
@@ -37,7 +33,6 @@ import {
 } from '@/hooks/useFolder';
 import { useUploadQueue } from '@/hooks/useUploadQueue';
 import { getDownloadUrl } from '@/api/files';
-import { formatDate } from '@/lib/format';
 import type { FileItem, Folder } from '@/api/types';
 
 export function FolderPage() {
@@ -63,6 +58,7 @@ export function FolderPage() {
   const [movingFile, setMovingFile] = useState<FileItem | null>(null);
   const [deletingFile, setDeletingFile] = useState<FileItem | null>(null);
   const [previewing, setPreviewing] = useState<FileItem | null>(null);
+  const [sharing, setSharing] = useState<ShareTarget | null>(null);
 
   const handleCreateFolder = (name: string) => {
     if (!folderId) return;
@@ -201,6 +197,21 @@ export function FolderPage() {
         <div className="flex shrink-0 items-center gap-2">
           <Button
             variant="outline"
+            disabled={!folder.isSuccess}
+            onClick={() =>
+              folder.data &&
+              setSharing({
+                type: 'FOLDER',
+                id: folder.data.id,
+                name: folder.data.name,
+              })
+            }
+          >
+            <Share2Icon />
+            Share
+          </Button>
+          <Button
+            variant="outline"
             onClick={() => setCreating(true)}
             disabled={!folder.isSuccess}
           >
@@ -232,7 +243,7 @@ export function FolderPage() {
 
       <UploadDropzone disabled={!folder.isSuccess} onFiles={uploads.enqueue}>
         <div className="mt-8">
-          {children.isPending && <TableSkeleton />}
+          {children.isPending && <ContentsTableSkeleton />}
 
           {children.isError && (
             <ErrorState
@@ -264,43 +275,30 @@ export function FolderPage() {
           )}
 
           {children.isSuccess && !isEmpty && (
-            <div className="rounded-xl border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead className="w-28 text-right">Size</TableHead>
-                    <TableHead className="w-36 text-right">Updated</TableHead>
-                    <TableHead className="w-12" />
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {/* Folders always sort above files. */}
-                  {children.data.folders.map((child) => (
-                    <ItemRow
-                      key={child.id}
-                      name={child.name}
-                      meta={formatDate(child.updatedAt)}
-                      onOpen={() => navigate(`/folders/${child.id}`)}
-                      onRename={() => setRenamingFolder(child)}
-                      onDelete={() => setDeletingFolder(child)}
-                    />
-                  ))}
-
-                  {children.data.files.map((file) => (
-                    <FileRow
-                      key={file.id}
-                      file={file}
-                      onPreview={() => setPreviewing(file)}
-                      onDownload={() => void handleDownload(file)}
-                      onRename={() => setRenamingFile(file)}
-                      onMove={() => setMovingFile(file)}
-                      onDelete={() => setDeletingFile(file)}
-                    />
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+            <ContentsTable
+              folders={children.data.folders}
+              files={children.data.files}
+              onOpenFolder={(id) => navigate(`/folders/${id}`)}
+              onPreviewFile={setPreviewing}
+              onDownloadFile={(file) => void handleDownload(file)}
+              folderActions={(child) => ({
+                onRename: () => setRenamingFolder(child),
+                onDelete: () => setDeletingFolder(child),
+                onShare: () =>
+                  setSharing({
+                    type: 'FOLDER',
+                    id: child.id,
+                    name: child.name,
+                  }),
+              })}
+              fileActions={(file) => ({
+                onRename: () => setRenamingFile(file),
+                onMove: () => setMovingFile(file),
+                onDelete: () => setDeletingFile(file),
+                onShare: () =>
+                  setSharing({ type: 'FILE', id: file.id, name: file.name }),
+              })}
+            />
           )}
         </div>
       </UploadDropzone>
@@ -367,44 +365,18 @@ export function FolderPage() {
         />
       )}
 
+      {sharing && (
+        <ShareDialog
+          target={sharing}
+          onOpenChange={(open) => !open && setSharing(null)}
+        />
+      )}
+
       <UploadQueue
         items={uploads.items}
         onRetry={uploads.retry}
         onDismiss={uploads.dismiss}
       />
-    </div>
-  );
-}
-
-function TableSkeleton() {
-  return (
-    <div className="rounded-xl border">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead className="w-28 text-right">Size</TableHead>
-            <TableHead className="w-36 text-right">Updated</TableHead>
-            <TableHead className="w-12" />
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {[0, 1, 2, 3].map((key) => (
-            <TableRow key={key}>
-              <TableCell>
-                <Skeleton className="h-4 w-48" />
-              </TableCell>
-              <TableCell className="text-right">
-                <Skeleton className="ml-auto h-4 w-14" />
-              </TableCell>
-              <TableCell className="text-right">
-                <Skeleton className="ml-auto h-4 w-24" />
-              </TableCell>
-              <TableCell />
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
     </div>
   );
 }
