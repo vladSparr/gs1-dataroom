@@ -2,8 +2,10 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import { RequireAuth } from '@/auth/RequireAuth';
 import { AppShell } from '@/components/AppShell';
 import { AuthCallbackPage } from '@/pages/AuthCallbackPage';
-import { HomePage } from '@/pages/HomePage';
+import { FolderPage } from '@/pages/FolderPage';
 import { LoginPage } from '@/pages/LoginPage';
+import { RoomRedirectPage } from '@/pages/RoomRedirectPage';
+import { RoomsPage } from '@/pages/RoomsPage';
 
 export default function App() {
   return (
@@ -13,7 +15,9 @@ export default function App() {
 
       <Route element={<RequireAuth />}>
         <Route element={<AppShell />}>
-          <Route path="/" element={<HomePage />} />
+          <Route path="/" element={<RoomsPage />} />
+          <Route path="/rooms/:roomId" element={<RoomRedirectPage />} />
+          <Route path="/folders/:folderId" element={<FolderPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Route>

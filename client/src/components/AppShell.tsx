@@ -14,14 +14,8 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 import { Toaster } from '@/components/ui/sonner';
 import { apiFetch } from '@/lib/api';
+import type { Me } from '@/api/types';
 import { useAuth } from '@/auth/useAuth';
-
-interface Me {
-  id: string;
-  email: string;
-  name: string | null;
-  avatarUrl: string | null;
-}
 
 export function AppShell() {
   const { signOut } = useAuth();
