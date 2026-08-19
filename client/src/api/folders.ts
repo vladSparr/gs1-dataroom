@@ -2,21 +2,21 @@ import { apiFetch } from '@/lib/api';
 import type {
   DeleteFolderResult,
   Folder,
+  FolderChildren,
   FolderDetail,
   FolderStats,
-  Page,
 } from './types';
 
 export function getFolder(folderId: string): Promise<FolderDetail> {
   return apiFetch<FolderDetail>(`/folders/${folderId}`);
 }
 
-export function listSubfolders(
+export function listChildren(
   folderId: string,
   cursor?: string,
-): Promise<Page<Folder>> {
+): Promise<FolderChildren> {
   const query = cursor ? `?cursor=${encodeURIComponent(cursor)}` : '';
-  return apiFetch<Page<Folder>>(`/folders/${folderId}/children${query}`);
+  return apiFetch<FolderChildren>(`/folders/${folderId}/children${query}`);
 }
 
 export function getFolderStats(folderId: string): Promise<FolderStats> {

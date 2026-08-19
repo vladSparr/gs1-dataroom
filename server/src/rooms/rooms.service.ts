@@ -1,14 +1,17 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { AccessService } from '../access/access.service';
+import { StorageService } from '../storage/storage.service';
 import { DEFAULT_PAGE_SIZE, toPage, type Page } from '../common/pagination';
 import type { RoomResponseDto } from './dto/room-response.dto';
+import type { RoomFolderDto } from './dto/room-folder.dto';
 
 @Injectable()
 export class RoomsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly access: AccessService,
+    private readonly storage: StorageService,
   ) {}
 
   /**
@@ -92,9 +95,28 @@ export class RoomsService {
     return this.toResponse(room, rootId);
   }
 
+  /** Flat list for the move picker: ordered by path, so parents precede children. */
+  async listFolders(userId: string, roomId: string): Promise<RoomFolderDto[]> {
+    await this.access.assertRoomAccess(userId, roomId);
+
+    return this.prisma.folder.findMany({
+      where: { dataRoomId: roomId },
+      orderBy: { path: 'asc' },
+      select: { id: true, name: true, depth: true, parentId: true },
+    });
+  }
+
   async remove(userId: string, roomId: string): Promise<void> {
     await this.access.assertRoomAccess(userId, roomId);
-    // Folders and files fall away through the cascades declared in the schema.
+
+    // The cascade drops folders and files without running application code,
+    // so the blobs are collected before the rows disappear.
+    const doomed = await this.prisma.file.findMany({
+      where: { dataRoomId: roomId },
+      select: { storageKey: true },
+    });
+
+    await this.storage.remove(doomed.map((file) => file.storageKey));
     await this.prisma.dataRoom.delete({ where: { id: roomId } });
   }
 

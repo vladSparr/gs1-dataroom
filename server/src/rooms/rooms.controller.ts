@@ -18,6 +18,7 @@ import { DEFAULT_PAGE_SIZE, type Page } from '../common/pagination';
 import { CreateRoomDto } from './dto/create-room.dto';
 import { RenameRoomDto } from './dto/rename-room.dto';
 import type { RoomResponseDto } from './dto/room-response.dto';
+import type { RoomFolderDto } from './dto/room-folder.dto';
 import { RoomsService } from './rooms.service';
 
 @Controller('rooms')
@@ -50,6 +51,14 @@ export class RoomsController {
     @Param('id', ParseUUIDPipe) id: string,
   ): Promise<RoomResponseDto> {
     return this.rooms.get(user.id, id);
+  }
+
+  @Get(':id/folders')
+  listFolders(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<RoomFolderDto[]> {
+    return this.rooms.listFolders(user.id, id);
   }
 
   @Patch(':id')

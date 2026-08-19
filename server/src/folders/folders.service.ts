@@ -3,14 +3,17 @@ import {
   ConflictException,
   Injectable,
 } from '@nestjs/common';
-import { Prisma, type Folder } from '@prisma/client';
+import { Prisma, type File, type Folder } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { AccessService } from '../access/access.service';
+import { StorageService } from '../storage/storage.service';
 import { nextAvailableName } from '../common/naming';
-import { DEFAULT_PAGE_SIZE, toPage, type Page } from '../common/pagination';
+import { DEFAULT_PAGE_SIZE } from '../common/pagination';
+import type { FileResponseDto } from '../files/dto/file-response.dto';
 import type {
   BreadcrumbDto,
   DeleteFolderResultDto,
+  FolderChildrenDto,
   FolderDetailDto,
   FolderResponseDto,
   FolderStatsDto,
@@ -23,6 +26,7 @@ export class FoldersService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly access: AccessService,
+    private readonly storage: StorageService,
   ) {}
 
   async get(userId: string, folderId: string): Promise<FolderDetailDto> {
@@ -34,25 +38,51 @@ export class FoldersService {
     };
   }
 
+  /**
+   * One page over a stream that runs folders first, then files, so a single
+   * cursor is enough. Only READY files are listed — an abandoned upload stays
+   * PENDING and stays invisible.
+   */
   async listChildren(
     userId: string,
     folderId: string,
     cursor: string | undefined,
     limit = DEFAULT_PAGE_SIZE,
-  ): Promise<Page<FolderResponseDto>> {
+  ): Promise<FolderChildrenDto> {
     await this.access.assertFolderAccess(userId, folderId);
 
-    const children = await this.prisma.folder.findMany({
-      where: { parentId: folderId },
-      orderBy: [{ name: 'asc' }, { id: 'asc' }],
-      take: limit,
-      ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
-    });
+    const cursorIsFile = cursor
+      ? (await this.prisma.file.count({ where: { id: cursor, folderId } })) > 0
+      : false;
 
-    return toPage(
-      children.map((child) => this.toResponse(child)),
-      limit,
-    );
+    const folders = cursorIsFile
+      ? []
+      : await this.prisma.folder.findMany({
+          where: { parentId: folderId },
+          orderBy: [{ name: 'asc' }, { id: 'asc' }],
+          take: limit,
+          ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
+        });
+
+    const remaining = limit - folders.length;
+    const files =
+      remaining > 0
+        ? await this.prisma.file.findMany({
+            where: { folderId, status: 'READY' },
+            orderBy: [{ name: 'asc' }, { id: 'asc' }],
+            take: remaining,
+            ...(cursorIsFile ? { cursor: { id: cursor }, skip: 1 } : {}),
+          })
+        : [];
+
+    const last = files.at(-1) ?? folders.at(-1);
+    const full = folders.length + files.length === limit;
+
+    return {
+      folders: folders.map((folder) => this.toResponse(folder)),
+      files: files.map((file) => this.toFileResponse(file)),
+      nextCursor: full && last ? last.id : null,
+    };
   }
 
   async create(
@@ -124,6 +154,16 @@ export class FoldersService {
 
     // Counted before the delete so the response can state what disappeared.
     const deleted = await this.statsFor(folder);
+
+    // The database cascade removes the rows without running any application
+    // code, so the blobs have to be collected first or they are orphaned with
+    // nothing left pointing at them. PENDING uploads count too.
+    const doomed = await this.prisma.file.findMany({
+      where: { folder: { path: { startsWith: folder.path } } },
+      select: { storageKey: true },
+    });
+
+    await this.storage.remove(doomed.map((file) => file.storageKey));
     await this.prisma.folder.delete({ where: { id: folderId } });
 
     return { deleted };
@@ -199,6 +239,19 @@ export class FoldersService {
       );
     }
     return error;
+  }
+
+  private toFileResponse(file: File): FileResponseDto {
+    return {
+      id: file.id,
+      name: file.name,
+      size: file.size.toString(),
+      mimeType: file.mimeType,
+      folderId: file.folderId,
+      dataRoomId: file.dataRoomId,
+      createdAt: file.createdAt,
+      updatedAt: file.updatedAt,
+    };
   }
 
   private toResponse(folder: Folder): FolderResponseDto {

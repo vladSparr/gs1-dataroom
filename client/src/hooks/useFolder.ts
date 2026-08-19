@@ -4,9 +4,10 @@ import {
   deleteFolder,
   getFolder,
   getFolderStats,
-  listSubfolders,
+  listChildren,
   renameFolder,
 } from '@/api/folders';
+import { deleteFile, moveFile, renameFile } from '@/api/files';
 
 export function useFolder(folderId: string | undefined) {
   return useQuery({
@@ -16,10 +17,11 @@ export function useFolder(folderId: string | undefined) {
   });
 }
 
-export function useSubfolders(folderId: string | undefined) {
+/** Subfolders and READY files for one folder, in a single request. */
+export function useFolderChildren(folderId: string | undefined) {
   return useQuery({
     queryKey: ['folder', folderId, 'children'],
-    queryFn: () => listSubfolders(folderId as string),
+    queryFn: () => listChildren(folderId as string),
     enabled: Boolean(folderId),
   });
 }
@@ -63,4 +65,23 @@ export function useRenameFolder() {
 
 export function useDeleteFolder() {
   return useFolderMutation((id: string) => deleteFolder(id));
+}
+
+// File mutations share the same invalidation: a move touches two folders, and
+// a rename changes the sort order of the listing it lives in.
+
+export function useRenameFile() {
+  return useFolderMutation(({ id, name }: { id: string; name: string }) =>
+    renameFile(id, name),
+  );
+}
+
+export function useMoveFile() {
+  return useFolderMutation(({ id, folderId }: { id: string; folderId: string }) =>
+    moveFile(id, folderId),
+  );
+}
+
+export function useDeleteFile() {
+  return useFolderMutation((id: string) => deleteFile(id));
 }

@@ -1,5 +1,5 @@
 import { apiFetch } from '@/lib/api';
-import type { Page, Room } from './types';
+import type { Page, Room, RoomFolder } from './types';
 
 export function listRooms(cursor?: string): Promise<Page<Room>> {
   const query = cursor ? `?cursor=${encodeURIComponent(cursor)}` : '';
@@ -8,6 +8,10 @@ export function listRooms(cursor?: string): Promise<Page<Room>> {
 
 export function getRoom(roomId: string): Promise<Room> {
   return apiFetch<Room>(`/rooms/${roomId}`);
+}
+
+export function listRoomFolders(roomId: string): Promise<RoomFolder[]> {
+  return apiFetch<RoomFolder[]>(`/rooms/${roomId}/folders`);
 }
 
 export function createRoom(name: string): Promise<Room> {

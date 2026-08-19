@@ -7,8 +7,10 @@ import { AuthModule } from './auth/auth.module';
 import { JwtGuard } from './auth/jwt.guard';
 import { UsersModule } from './users/users.module';
 import { AccessModule } from './access/access.module';
+import { StorageModule } from './storage/storage.module';
 import { RoomsModule } from './rooms/rooms.module';
 import { FoldersModule } from './folders/folders.module';
+import { FilesModule } from './files/files.module';
 
 @Module({
   imports: [
@@ -17,8 +19,10 @@ import { FoldersModule } from './folders/folders.module';
     AuthModule,
     UsersModule,
     AccessModule,
+    StorageModule,
     RoomsModule,
     FoldersModule,
+    FilesModule,
   ],
   controllers: [AppController],
   providers: [{ provide: APP_GUARD, useClass: JwtGuard }],

@@ -12,11 +12,12 @@ import {
 import { CurrentUser } from '../auth/current-user.decorator';
 import type { AuthUser } from '../auth/auth.types';
 import { PaginationQueryDto } from '../common/dto/pagination-query.dto';
-import { DEFAULT_PAGE_SIZE, type Page } from '../common/pagination';
+import { DEFAULT_PAGE_SIZE } from '../common/pagination';
 import { CreateFolderDto } from './dto/create-folder.dto';
 import { RenameFolderDto } from './dto/rename-folder.dto';
 import type {
   DeleteFolderResultDto,
+  FolderChildrenDto,
   FolderDetailDto,
   FolderResponseDto,
   FolderStatsDto,
@@ -48,7 +49,7 @@ export class FoldersController {
     @CurrentUser() user: AuthUser,
     @Param('id', ParseUUIDPipe) id: string,
     @Query() query: PaginationQueryDto,
-  ): Promise<Page<FolderResponseDto>> {
+  ): Promise<FolderChildrenDto> {
     return this.folders.listChildren(
       user.id,
       id,
